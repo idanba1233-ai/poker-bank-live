@@ -73,23 +73,37 @@ footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22
 .stage .crown{width:84px;margin-bottom:-12px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));animation:drop .8s .3s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes drop{from{transform:translateY(-120px) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
 .stage .ttl{position:absolute;top:5%;left:0;right:0;z-index:2;text-align:center;font-family:Frank,serif;font-weight:900;font-size:34px}
+#sndbtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:120;border:0;border-radius:999px;padding:12px 20px;font:800 15px Heebo,sans-serif;color:#1A1405;background:linear-gradient(180deg,#F8E58C,#E3C04F 45%,#B8901F);box-shadow:0 8px 22px rgba(0,0,0,.5);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.05)}}
 </style>
 </head>
 <body>
 <div id="intro"><div class="iphoto"></div><div class="ishade"></div>
   <div class="itop"><img class="ichip" src="img/logo.webp" alt=""><div class="ititle gtxt">Poker Bank</div><div class="itag">THE HOME GAME BANK</div></div>
-  <div class="iskip">לחיצה לדילוג · 🔊</div>
+  <div class="iskip">לחיצה לדילוג</div>
   <div class="icredit">נבנה על ידי <b>עידן בן אברהם</b></div></div>
 <header>
   <img src="img/logo.webp" alt="">
   <div style="flex:1"><h1 class="gtxt">Poker Bank</h1>
   <div class="live"><span class="dot" id="dot"></span><span id="st">מתחבר…</span></div></div>
 </header>
+<button id="sndbtn" type="button">🔊 לחצו כאן להפעלת הקולות</button>
 <main id="m"><div class="msg">טוען את השולחן…</div></main>
 <footer>צפייה בלבד · נבנה על ידי עידן בן אברהם</footer>
 <script type="module">
-import { dealerPeek, allowImageFallback } from './js/dealers.js';
+import { dealerPeek, allowImageFallback, setDealerSound } from './js/dealers.js';
 allowImageFallback(true);
+// קול: דפדפנים חוסמים קול עד שנוגעים במסך. בנגיעה הראשונה "פותחים" את כל הצלילים מראש.
+const SNDS = ['dl_peek1','dl_peek2','dl_walk','dl_wave','dl_duo1','dl_peek3','dl_duo3','dl_kiss','dl_card','dl_clap','dl_chips','dl_knock','dl_cards','dl_sides'];
+const audios = {}; let soundOn = false, firstPending = false, firstTimer = null;
+function unlockSound() {
+  if (soundOn) return; soundOn = true;
+  SNDS.forEach((n) => { const a = new Audio(`sfx/${n}.mp3`); a.preload = 'auto'; a.muted = true; a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); audios[n] = a; });
+  document.getElementById('sndbtn')?.remove();
+  if (firstPending) { firstPending = false; clearTimeout(firstTimer); setTimeout(() => dealerPeek(), 500); }
+}
+setDealerSound((n) => { const a = audios[n]; if (!a) return; try { a.currentTime = 0; a.play().catch(() => {}); } catch {} });
+['pointerdown', 'touchend', 'click'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: false, passive: true }));
 const DB = 'https://poker-bank-live-36384-default-rtdb.europe-west1.firebasedatabase.app';
 const id = (location.hash || '').slice(1).replace(/[^A-Za-z0-9]/g, '');
 const $m = document.getElementById('m'), $st = document.getElementById('st'), $dot = document.getElementById('dot');
@@ -144,7 +158,12 @@ function maybePeek() {
   if (!introDone || !data) return;
   const e = data.e || 0;
   if (data.st === 'closed') { if (!peekedClose) { peekedClose = true; setTimeout(() => dealerPeek(), 1200); } return; }
-  if (lastE == null) { lastE = e; peekAt = Date.now(); setTimeout(() => dealerPeek(), 900); return; } // פעם ראשונה שנכנסים
+  if (lastE == null) { // פעם ראשונה שנכנסים: מחכים ללחיצה על "הפעלת קולות" כדי שההצצה הראשונה תהיה עם קול
+    lastE = e; peekAt = Date.now();
+    if (soundOn) setTimeout(() => dealerPeek(), 900);
+    else { firstPending = true; firstTimer = setTimeout(() => { if (firstPending) { firstPending = false; dealerPeek(); } }, 12000); }
+    return;
+  }
   if (e > lastE) { since += e - lastE; }
   lastE = e;
   if (since >= 3) { since = 0; peekAt = Date.now(); setTimeout(() => dealerPeek(), 700); }
