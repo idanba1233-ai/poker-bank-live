@@ -5,6 +5,8 @@ const CLIPS = [
   { src: 'vid/walk_blonde', cls: 'dl-walk', dur: 5.3, snd: 'dl_walk' },     // חוצה את המסך
   { src: 'vid/peek_brunette2', cls: 'dl-peek', dur: 3.5, snd: 'dl_peek2' },  // מציצה ושולחת נשיקה מהשפתיים
   { src: 'vid/wave_blonde', cls: 'dl-wave', dur: 3.3, snd: 'dl_wave' },     // מנופפת באמצע
+  { src: 'vid/duo_1', cls: 'dl-duo', dur: 8.0, snd: 'dl_duo1' },            // שתיהן נכנסות, נשיקה, לוחשות וצוחקות
+  { src: 'vid/duo_2', cls: 'dl-duo', dur: 3.75, snd: null },                // שתיהן קופצות מלמטה ומנופפות
 ];
 // אנדרואיד/כרום: וידאו שקוף (WebM). אייפון/ספארי לא תומך בזה → WebP מונפש (אם קיים)
 let useImg = null;
@@ -27,9 +29,10 @@ export function setDealerBase(b) { base = b; }
 
 // קול: באפליקציה מנגנים דרך מנוע הצלילים (אפשר לכבות בהגדרות). כאן ברירת מחדל: <audio> רגיל.
 let soundFn = (name) => {
+  if (!name) return;
   try { const a = new Audio(`${base}sfx/${name}.mp3`); a.volume = 1; a.play().catch(() => {}); } catch {}
 };
-export function setDealerSound(fn) { soundFn = fn; }
+export function setDealerSound(fn) { soundFn = (n) => { if (n) fn(n); }; }
 
 const CSS = `
 .dl{position:fixed;bottom:0;z-index:150;pointer-events:none;opacity:0;transition:opacity .35s ease;will-change:opacity}
@@ -37,6 +40,7 @@ const CSS = `
 .dl video,.dl img{display:block;width:100%;height:100%;object-fit:contain}
 .dl-peek{right:-14vw;height:min(64vh,140vw);aspect-ratio:1/1}
 .dl-wave{left:50%;transform:translateX(-50%);height:min(66vh,140vw);aspect-ratio:1/1}
+.dl-duo{left:50%;transform:translateX(-50%);height:min(50vh,100vw);aspect-ratio:1024/720}
 .dl-walk{left:50%;transform:translateX(-50%);height:min(84vh,180vw);aspect-ratio:16/9}
 `;
 function ensureCss() {
