@@ -11,7 +11,8 @@
 @font-face{font-family:Heebo;font-weight:500;font-display:swap;src:url(fonts/heebo-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
 @font-face{font-family:Heebo;font-weight:800;font-display:swap;src:url(fonts/heebo-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
 @font-face{font-family:Heebo;font-weight:800;font-display:swap;src:url(fonts/heebo-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
-@font-face{font-family:Frank;font-weight:900;font-display:swap;src:url(fonts/frank-ruhl-libre-latin-900-normal.woff2) format('woff2')}
+@font-face{font-family:Frank;font-weight:900;font-display:swap;src:url(fonts/frank-ruhl-libre-latin-900-normal.woff2) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:Frank;font-weight:900;font-display:swap;src:url(fonts/frank-ruhl-libre-hebrew-900-normal.woff2) format('woff2');unicode-range:U+0590-05FF}
 :root{--gold1:#FBEFA8;--gold:#E3C04F;--gold3:#B8901F;--txt:#F5F2EA;--mut:#A9B3AE;--win:#5BE58F;--loss:#FF7D7D}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#07100C;color:var(--txt);font-family:Heebo,system-ui,sans-serif;min-height:100%;-webkit-text-size-adjust:100%}
@@ -49,9 +50,36 @@ h2{font-size:15px;color:var(--mut);margin:18px 4px 8px}
 .tr b{color:var(--gold1);direction:ltr}
 footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22px}
 .champ{padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;border-color:rgba(227,192,79,.6)}
+
+/* פתיחה (כמו באפליקציה) */
+#intro{position:fixed;inset:0;z-index:200;background:#050706;display:flex;flex-direction:column;align-items:center;transition:opacity .6s ease;overflow:hidden}
+#intro.out{opacity:0;pointer-events:none}
+#intro .iphoto{position:absolute;inset:0;background:url(img/intro_bg.webp) 62% center/cover no-repeat;opacity:0;transform:scale(1.12);animation:iphoto 5s cubic-bezier(.25,.6,.3,1) forwards}
+@keyframes iphoto{0%{opacity:0;transform:scale(1.12)}22%{opacity:1}100%{opacity:1;transform:scale(1)}}
+#intro .ishade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,7,6,.55) 0%,rgba(5,7,6,0) 30%,rgba(5,7,6,0) 72%,rgba(5,7,6,.85) 100%)}
+#intro .itop{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:calc(env(safe-area-inset-top) + 7vh)}
+#intro .ichip{width:112px;height:112px;animation:ispin 1.15s .35s cubic-bezier(.2,.9,.25,1) both;filter:drop-shadow(0 14px 24px rgba(0,0,0,.85)) drop-shadow(0 0 26px rgba(227,192,79,.5))}
+@keyframes ispin{0%{transform:translateY(-140px) rotateY(1080deg) scale(.25);opacity:0}60%{opacity:1}85%{transform:translateY(8px) scale(1.04)}100%{transform:none}}
+#intro .ititle{font-family:Frank,serif;font-weight:900;font-size:44px;margin-top:8px;direction:ltr;opacity:0;animation:iup .7s 1.6s ease forwards;filter:drop-shadow(0 3px 10px rgba(0,0,0,.9))}
+#intro .itag{font-size:12px;letter-spacing:5px;color:#E9E1C6;opacity:0;animation:iup .7s 1.85s ease forwards;text-shadow:0 2px 8px #000}
+#intro .icredit{position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));font-size:15px;color:#E9E1C6;opacity:0;animation:iup .8s 2.4s ease forwards;text-shadow:0 2px 10px #000}
+#intro .icredit b{color:#E3C04F}
+#intro .iskip{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:12px;font-size:12px;color:#CFC6A8;opacity:.7}
+@keyframes iup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* במה בסוף הערב */
+.stage{position:relative;margin:0 -14px 12px;aspect-ratio:1080/1935;background:url(img/stage2.webp) center bottom/cover no-repeat;border-radius:0 0 26px 26px;overflow:hidden}
+.stage::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,16,12,.6),rgba(7,16,12,0) 25%,rgba(7,16,12,0) 60%,rgba(7,16,12,.9))}
+.stage .sw{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;width:46%}
+.stage .crown{width:84px;margin-bottom:-12px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));animation:drop .8s .3s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{transform:translateY(-120px) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+.stage .ttl{position:absolute;top:5%;left:0;right:0;z-index:2;text-align:center;font-family:Frank,serif;font-weight:900;font-size:34px}
 </style>
 </head>
 <body>
+<div id="intro"><div class="iphoto"></div><div class="ishade"></div>
+  <div class="itop"><img class="ichip" src="img/logo.webp" alt=""><div class="ititle gtxt">Poker Bank</div><div class="itag">THE HOME GAME BANK</div></div>
+  <div class="iskip">לחיצה לדילוג</div>
+  <div class="icredit">נבנה על ידי <b>עידן בן אברהם</b></div></div>
 <header>
   <img src="img/logo.webp" alt="">
   <div style="flex:1"><h1 class="gtxt">Poker Bank</h1>
@@ -59,7 +87,9 @@ footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22
 </header>
 <main id="m"><div class="msg">טוען את השולחן…</div></main>
 <footer>צפייה בלבד · נבנה על ידי עידן בן אברהם</footer>
-<script>
+<script type="module">
+import { dealerPeek, allowImageFallback } from './js/dealers.js';
+allowImageFallback(true);
 const DB = 'https://poker-bank-live-36384-default-rtdb.europe-west1.firebasedatabase.app';
 const id = (location.hash || '').slice(1).replace(/[^A-Za-z0-9]/g, '');
 const $m = document.getElementById('m'), $st = document.getElementById('st'), $dot = document.getElementById('dot');
@@ -79,9 +109,11 @@ function render() {
       ? `<h2>משלמים לקבוצת הפייבוקס</h2><div class="card">${(data.pay || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>
          <h2>הקבוצה מעבירה</h2><div class="card">${(data.get || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>`
       : `<h2>מי משלם למי</h2><div class="card">${(data.tr || []).length ? data.tr.map((t) => `<div class="tr"><span>${esc(t.f)} ← ${esc(t.t)}</span><b>${money(t.a)}</b></div>`).join('') : '<div class="tr"><span>אין העברות</span></div>'}</div>`;
-    $m.innerHTML = `${top && top.f > 0 ? `<div class="card champ"><div class="av" style="--c:${esc(top.c)};width:62px;height:62px;font-size:26px">${esc(top.n.charAt(0))}</div>
-      <div style="flex:1"><div class="k" style="color:var(--gold)">👑 אלוף הערב</div><div class="nm" style="font-size:24px">${esc(top.n)}</div></div>
-      <div class="amt win" style="font-size:26px">${money(top.f, true)}</div></div>` : ''}
+    $m.innerHTML = `${top && top.f > 0 ? `<div class="stage"><div class="ttl gtxt">אלוף הערב</div><div class="sw">
+        <img class="crown" src="img/crown.webp" alt="">
+        <div class="av" style="--c:${esc(top.c)};width:86px;height:86px;font-size:36px">${esc(top.n.charAt(0))}</div>
+        <div class="nm" style="font-size:24px;margin-top:6px;text-shadow:0 2px 8px #000">${esc(top.n)}</div>
+        <div class="amt win" style="font-size:24px;text-align:center;min-width:0;text-shadow:0 2px 8px #000">${money(top.f, true)}</div></div></div>` : ''}
       <h2>הערב נסגר · רווח והפסד</h2>
       <div class="card list">${data.r.map((r) => `<div><div class="av" style="--c:${esc(r.c)}">${esc(r.n.charAt(0))}</div><div style="flex:1" class="nm">${esc(r.n)}</div><div class="amt ${cls(r.f)}">${money(r.f, true)}</div></div>`).join('')}</div>${tr}`;
     return;
@@ -107,6 +139,15 @@ function status() {
 }
 setInterval(status, 5000);
 
+let introDone = false, lastE = null, peekedClose = false;
+function maybePeek() {
+  if (!introDone || !data) return;
+  const e = data.e || 0;
+  if (data.st === 'closed') { if (!peekedClose) { peekedClose = true; setTimeout(() => dealerPeek(), 1200); } return; }
+  if (lastE == null) { lastE = e; setTimeout(() => dealerPeek(), 900); return; } // פעם ראשונה שנכנסים
+  if (Math.floor(e / 10) > Math.floor(lastE / 10)) setTimeout(() => dealerPeek(), 700);
+  lastE = e;
+}
 function apply(path, d) {
   if (path === '/') data = d;
   else {
@@ -115,7 +156,7 @@ function apply(path, d) {
     keys.slice(0, -1).forEach((k) => { if (!o[k]) o[k] = {}; o = o[k]; });
     const last = keys[keys.length - 1]; if (d === null) delete o[last]; else o[last] = d;
   }
-  render(); status();
+  render(); status(); maybePeek();
 }
 
 let es = null, pollT = null;
@@ -136,6 +177,14 @@ async function poll() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && es?.readyState === 2) connect(); });
 connect();
+// פתיחה של 5 שניות, לחיצה מדלגת
+(() => {
+  const el = document.getElementById('intro');
+  let done = false;
+  const fin = () => { if (done) return; done = true; el.classList.add('out'); setTimeout(() => { el.remove(); introDone = true; maybePeek(); }, 620); };
+  el.addEventListener('click', fin);
+  setTimeout(fin, 5000);
+})();
 </script>
 </body>
 </html>
