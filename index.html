@@ -147,7 +147,7 @@ function maybePeek() {
   if (lastE == null) { lastE = e; peekAt = Date.now(); setTimeout(() => dealerPeek(), 900); return; } // פעם ראשונה שנכנסים
   if (e > lastE) { since += e - lastE; }
   lastE = e;
-  if (since >= 3 && Date.now() - peekAt > 120000) { since = 0; peekAt = Date.now(); setTimeout(() => dealerPeek(), 700); }
+  if (since >= 3) { since = 0; peekAt = Date.now(); setTimeout(() => dealerPeek(), 700); }
 }
 function apply(path, d) {
   if (path === '/') data = d;
