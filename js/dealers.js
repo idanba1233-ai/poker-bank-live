@@ -3,19 +3,19 @@
 const CLIPS = [
   { src: 'vid/peek_brunette', cls: 'dl-peek', dur: 5.4, snd: 'dl_peek1' },   // מציצה מהפינה ושולחת נשיקה
   { src: 'vid/walk_blonde', cls: 'dl-walk', dur: 5.3, snd: 'dl_walk' },     // חוצה את המסך
-  { src: 'vid/peek_brunette2', cls: 'dl-peek', dur: 3.5, snd: 'dl_peek2' },  // מציצה ושולחת נשיקה מהשפתיים
-  { src: 'vid/wave_blonde', cls: 'dl-wave', dur: 3.3, snd: 'dl_wave' },     // מנופפת באמצע
+  { src: 'vid/peek_brunette2', cls: 'dl-peek', dur: 4.35, snd: 'dl_peek2' },  // מציצה ושולחת נשיקה מהשפתיים
+  { src: 'vid/wave_blonde', cls: 'dl-wave', dur: 4.1, snd: 'dl_wave' },     // מנופפת באמצע
   { src: 'vid/duo_1', cls: 'dl-duo', dur: 8.0, snd: 'dl_duo1' },            // שתיהן נכנסות, נשיקה, לוחשות וצוחקות
   { src: 'vid/duo_2', cls: 'dl-duo', dur: 3.75, snd: null },                // שתיהן קופצות מלמטה ומנופפות
-  { src: 'vid/peek_brunette3', cls: 'dl-peek', dur: 2.35, snd: 'dl_peek3' }, // הברונטית מציצה וקורצת
+  { src: 'vid/peek_brunette3', cls: 'dl-peek', dur: 2.95, snd: 'dl_peek3' }, // הברונטית מציצה וקורצת
   { src: 'vid/duo_3', cls: 'dl-duo', dur: 4.5, snd: 'dl_duo3' },            // שתיהן: הבלונדינית על הכתף, "Good luck!"
-  { src: 'vid/kiss_blonde', cls: 'dl-wave', dur: 2.6, snd: 'dl_kiss' },     // הבלונדינית עולה מלמטה ושולחת נשיקה
-  { src: 'vid/card_blonde', cls: 'dl-peek', dur: 2.95, snd: 'dl_card' },    // הבלונדינית זורקת קלף וקורצת
-  { src: 'vid/clap_duo', cls: 'dl-duo', dur: 2.8, snd: 'dl_clap' },         // שתיהן מוחאות כפיים
-  { src: 'vid/chips_brunette', cls: 'dl-peek', dur: 3.0, snd: 'dl_chips' }, // הברונטית סופרת צ'יפים
-  { src: 'vid/knock_brunette', cls: 'dl-peek', dur: 2.9, snd: 'dl_knock' }, // הברונטית דופקת על המסך
+  { src: 'vid/kiss_blonde', cls: 'dl-wave', dur: 3.25, snd: 'dl_kiss' },     // הבלונדינית עולה מלמטה ושולחת נשיקה
+  { src: 'vid/card_blonde', cls: 'dl-peek', dur: 3.7, snd: 'dl_card' },    // הבלונדינית זורקת קלף וקורצת
+  { src: 'vid/clap_duo', cls: 'dl-duo', dur: 3.55, snd: 'dl_clap' },         // שתיהן מוחאות כפיים
+  { src: 'vid/chips_brunette', cls: 'dl-peek', dur: 3.75, snd: 'dl_chips' }, // הברונטית סופרת צ'יפים
+  { src: 'vid/knock_brunette', cls: 'dl-peek', dur: 3.65, snd: 'dl_knock' }, // הברונטית דופקת על המסך
   { src: 'vid/cards_blonde', cls: 'dl-duo', dur: 3.45, snd: 'dl_cards' },   // הבלונדינית מערבבת קלפים
-  { src: 'vid/sides_kiss', cls: 'dl-sides', dur: 3.05, snd: 'dl_sides' },   // שתיהן מהצדדים, נשיקה ביחד
+  { src: 'vid/sides_kiss', cls: 'dl-sides', dur: 3.85, snd: 'dl_sides' },   // שתיהן מהצדדים, נשיקה ביחד
 ];
 // סדר אקראי, כדי שכל טלפון יראה רצף אחר
 for (let i = CLIPS.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [CLIPS[i], CLIPS[j]] = [CLIPS[j], CLIPS[i]]; }
