@@ -7,7 +7,18 @@ const CLIPS = [
   { src: 'vid/wave_blonde', cls: 'dl-wave', dur: 3.3, snd: 'dl_wave' },     // מנופפת באמצע
   { src: 'vid/duo_1', cls: 'dl-duo', dur: 8.0, snd: 'dl_duo1' },            // שתיהן נכנסות, נשיקה, לוחשות וצוחקות
   { src: 'vid/duo_2', cls: 'dl-duo', dur: 3.75, snd: null },                // שתיהן קופצות מלמטה ומנופפות
+  { src: 'vid/peek_brunette3', cls: 'dl-peek', dur: 2.35, snd: 'dl_peek3' }, // הברונטית מציצה וקורצת
+  { src: 'vid/duo_3', cls: 'dl-duo', dur: 4.5, snd: 'dl_duo3' },            // שתיהן: הבלונדינית על הכתף, "Good luck!"
+  { src: 'vid/kiss_blonde', cls: 'dl-wave', dur: 2.6, snd: 'dl_kiss' },     // הבלונדינית עולה מלמטה ושולחת נשיקה
+  { src: 'vid/card_blonde', cls: 'dl-peek', dur: 2.95, snd: 'dl_card' },    // הבלונדינית זורקת קלף וקורצת
+  { src: 'vid/clap_duo', cls: 'dl-duo', dur: 2.8, snd: 'dl_clap' },         // שתיהן מוחאות כפיים
+  { src: 'vid/chips_brunette', cls: 'dl-peek', dur: 3.0, snd: 'dl_chips' }, // הברונטית סופרת צ'יפים
+  { src: 'vid/knock_brunette', cls: 'dl-peek', dur: 2.9, snd: 'dl_knock' }, // הברונטית דופקת על המסך
+  { src: 'vid/cards_blonde', cls: 'dl-duo', dur: 3.45, snd: 'dl_cards' },   // הבלונדינית מערבבת קלפים
+  { src: 'vid/sides_kiss', cls: 'dl-sides', dur: 3.05, snd: 'dl_sides' },   // שתיהן מהצדדים, נשיקה ביחד
 ];
+// סדר אקראי, כדי שכל טלפון יראה רצף אחר
+for (let i = CLIPS.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [CLIPS[i], CLIPS[j]] = [CLIPS[j], CLIPS[i]]; }
 // אנדרואיד/כרום: וידאו שקוף (WebM). אייפון/ספארי לא תומך בזה → WebP מונפש (אם קיים)
 let useImg = null;
 function needImg() {
@@ -21,7 +32,7 @@ function needImg() {
 }
 let imgFallback = false;
 export function allowImageFallback(on) { imgFallback = on; }
-let idx = Math.floor(Math.random() * CLIPS.length);
+let idx = 0;
 let busy = false;
 let base = '';
 
@@ -41,6 +52,7 @@ const CSS = `
 .dl-peek{right:-14vw;height:min(64vh,140vw);aspect-ratio:1/1}
 .dl-wave{left:50%;transform:translateX(-50%);height:min(66vh,140vw);aspect-ratio:1/1}
 .dl-duo{left:50%;transform:translateX(-50%);height:min(50vh,100vw);aspect-ratio:1024/720}
+.dl-sides{left:50%;transform:translateX(-50%);width:min(135vw,96vh);aspect-ratio:1152/720}
 .dl-walk{left:50%;transform:translateX(-50%);height:min(84vh,180vw);aspect-ratio:16/9}
 `;
 function ensureCss() {
@@ -89,6 +101,12 @@ export function dealerPeek({ which } = {}) {
     setTimeout(end, 9000); // ביטחון: לא נשארת תקועה
     v.play().catch(end);
   });
+}
+
+// קטע מסוים לפי שם הקובץ (למשל לסוף הערב)
+export function dealerPeekByName(name) {
+  const k = CLIPS.findIndex((c) => c.src.endsWith('/' + name));
+  return k < 0 ? Promise.resolve(false) : dealerPeek({ which: k });
 }
 
 export function dealerBusy() { return busy; }
