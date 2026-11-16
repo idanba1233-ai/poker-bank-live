@@ -16,6 +16,10 @@ const CLIPS = [
   { src: 'vid/knock_brunette', cls: 'dl-peek', dur: 3.65, snd: 'dl_knock' }, // הברונטית דופקת על המסך
   { src: 'vid/cards_blonde', cls: 'dl-duo', dur: 3.45, snd: 'dl_cards' },   // הבלונדינית מערבבת קלפים
   { src: 'vid/sides_kiss', cls: 'dl-sides', dur: 3.85, snd: 'dl_sides' },   // שתיהן מהצדדים, נשיקה ביחד
+  { src: 'vid/a_slap', cls: 'dl-duo', dur: 5.0, snd: 'a_slap' },            // הבלונדינית עם הגב, הברונטית מפליקה, יוצאות
+  { src: 'vid/a_hooks', cls: 'dl-duo', dur: 7.5, snd: 'a_hooks' },          // הסוגר מאחורי הגב, פליק, יוצאות
+  { src: 'vid/a_fog', cls: 'dl-duo', dur: 7.0, snd: 'a_fog' },              // הברונטית נושפת על הזכוכית ומציירת
+  { src: 'vid/a_garter', cls: 'dl-duo', dur: 6.9, snd: 'a_garter' },        // הגרטר: מורידה, זורקת, מנופפות ויוצאות
 ];
 // סדר אקראי, כדי שכל טלפון יראה רצף אחר
 for (let i = CLIPS.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [CLIPS[i], CLIPS[j]] = [CLIPS[j], CLIPS[i]]; }
@@ -306,7 +310,7 @@ const MOMENTS = {
   idle:   { src: 'vid/a_slap',   cls: 'dl-duo', dur: 5.0, snd: 'a_slap',   line: 'נו... תיכנס כבר 💋',          lineAt: 3.4 },
   random: { src: 'vid/a_hooks',  cls: 'dl-duo', dur: 7.5, snd: 'a_hooks',  line: 'שים הכול בפנים 😉',           lineAt: 4.2 },
   rebuy:  { src: 'vid/a_fog',    cls: 'dl-duo', dur: 7.0, snd: 'a_fog',    line: 'עוד פעם נכנסת? לא מתעייף? 😉', lineAt: 3.5,
-            fog: { at: 1.3 }, heart: { at: 1.75, dur: 1.6, x: 0.33, y: 0.6, w: 0.17 } },
+            fog: { at: 1.3 }, heart: { at: 1.75, dur: 1.6, x: 0.38, y: 0.47, w: 0.12 } },
   leave:  { src: 'vid/a_garter', cls: 'dl-duo', dur: 6.9, snd: 'a_garter', line: 'מה, כבר גמרת? 😢',           lineAt: 4.8,
             garter: { at: 4.25, x: 0.33, y: 0.5 } },
 };
@@ -316,14 +320,13 @@ const MOMENT_CSS = `
 @font-face{font-family:DlLip;font-weight:700;font-display:block;src:url(${'${BASE}'}fonts/amatic-sc-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+FB1D-FB4F}
 @font-face{font-family:DlLip;font-weight:700;font-display:block;src:url(${'${BASE}'}fonts/amatic-sc-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
 .dl-line{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 24vh);transform:translateX(-50%) rotate(-4deg);z-index:154;pointer-events:none;width:min(88vw,520px);text-align:center;
-  font-family:DlLip,Heebo,system-ui,sans-serif;font-weight:700;direction:rtl;white-space:normal;font-size:min(15vw,76px);line-height:1;
+  font-family:DlLip,Heebo,system-ui,sans-serif;font-weight:700;direction:rtl;white-space:normal;font-size:min(12.5vw,62px);line-height:1.15;padding:.18em .35em .3em;
   color:#e0163a;-webkit-text-stroke:2.2px #c0102c;paint-order:stroke fill;text-shadow:0 2px 3px rgba(60,0,10,.55),0 0 16px rgba(0,0,0,.55);
   clip-path:inset(0 0 0 100%);transition:clip-path 1.3s steps(14,end),opacity .8s ease}
 .dl-line.on{clip-path:inset(0 0 0 0)}
 .dl-line.out{opacity:0}
-.dl-fog{position:fixed;inset:0;z-index:153;pointer-events:none;opacity:0;transition:opacity .5s ease;
-  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-.dl-fog.on{opacity:1}.dl-fog.out{opacity:0;transition:opacity 1.6s ease}
+.dl-fog{position:fixed;inset:0;z-index:153;pointer-events:none;opacity:0;transition:opacity .5s ease}
+.dl-fog.on{opacity:1}.dl-fog.out{opacity:0;transition:opacity 1.2s ease}
 .dl-fog svg{position:absolute;inset:0;width:100%;height:100%}
 .dl-garter{position:fixed;left:0;top:0;z-index:154;pointer-events:none;width:min(62vw,300px);will-change:transform,opacity}
 `;
@@ -343,30 +346,32 @@ function showLine(text, holdMs) {
   setTimeout(() => el.remove(), holdMs + 900);
 }
 
-// אדים על הזכוכית: ערפל לבנבן + לב שמצויר באצבע
-function showFog(box, m, clipLeftMs) {
+// אדים על הזכוכית: כתם אדים קטן במקום שהיא נושפת + לב שמצויר באצבע. בלי לטשטש את האפליקציה.
+function showFog(box, m) {
   const w = innerWidth, h = innerHeight;
-  const hp = boxPoint(box, m.heart) || { cx: w / 2, cy: h * 0.45, w: w * 0.3 };
+  const hp = boxPoint(box, m.heart) || { cx: w / 2, cy: h * 0.6, w: w * 0.2 };
+  const R = hp.w * 1.6; // רדיוס כתם האדים
   const s = hp.w / 100; // לב בסיסי ברוחב ~100
   const heart = 'M0,30 C-8,18 -50,4 -50,-22 C-50,-44 -22,-52 0,-30 C22,-52 50,-44 50,-22 C50,4 8,18 0,30Z';
   const el = document.createElement('div');
   el.className = 'dl-fog';
   el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <defs><radialGradient id="dlfg" cx="${hp.cx}" cy="${hp.cy}" r="${Math.max(w, h) * 0.75}" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#eef3f2" stop-opacity=".62"/><stop offset=".55" stop-color="#e6ecea" stop-opacity=".42"/><stop offset="1" stop-color="#dfe6e4" stop-opacity=".18"/></radialGradient>
-      <filter id="dlfb"><feGaussianBlur stdDeviation="1.2"/></filter></defs>
-    <rect width="${w}" height="${h}" fill="url(#dlfg)"/>
+    <defs><radialGradient id="dlfg" cx="${hp.cx}" cy="${hp.cy}" r="${R}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eef3f2" stop-opacity=".55"/><stop offset=".6" stop-color="#e8eeec" stop-opacity=".32"/><stop offset="1" stop-color="#e8eeec" stop-opacity="0"/></radialGradient>
+      <filter id="dlfb"><feGaussianBlur stdDeviation="1"/></filter></defs>
+    <circle cx="${hp.cx}" cy="${hp.cy}" r="${R}" fill="url(#dlfg)"/>
     <g transform="translate(${hp.cx},${hp.cy}) scale(${s})">
-      <path class="hp" d="${heart}" fill="none" stroke="rgba(40,60,58,.55)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#dlfb)"
+      <path class="hp" d="${heart}" fill="none" stroke="rgba(40,60,58,.6)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#dlfb)"
         stroke-dasharray="320" stroke-dashoffset="320"/>
     </g></svg>`;
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('on'));
   const hpEl = el.querySelector('.hp');
-  setTimeout(() => { hpEl.style.transition = `stroke-dashoffset ${m.heart.dur}s ease-in-out`; hpEl.style.strokeDashoffset = '0'; }, (m.heart.at - m.fog.at) * 1000);
-  const total = clipLeftMs + 1800;
+  const drawIn = (m.heart.at - m.fog.at) * 1000;
+  setTimeout(() => { hpEl.style.transition = `stroke-dashoffset ${m.heart.dur}s ease-in-out`; hpEl.style.strokeDashoffset = '0'; }, drawIn);
+  const total = drawIn + m.heart.dur * 1000 + 1300; // נעלם זמן קצר אחרי שהלב גמור
   setTimeout(() => el.classList.add('out'), total);
-  setTimeout(() => el.remove(), total + 1700);
+  setTimeout(() => el.remove(), total + 1300);
 }
 
 function garterSvg() {
@@ -420,7 +425,7 @@ export function dealerMoment(id) {
   ensureMomentCss();
   return showClip(m, (box) => {
     const T = (sec, fn) => atClipTime(box, sec, fn);
-    if (m.fog) T(m.fog.at, () => showFog(box, m, (m.dur - m.fog.at) * 1000));
+    if (m.fog) T(m.fog.at, () => showFog(box, m));
     if (m.garter) T(m.garter.at, () => showGarter(box, m));
     if (m.line) T(m.lineAt, () => showLine(m.line, (m.dur - m.lineAt) * 1000 + 2600));
   });

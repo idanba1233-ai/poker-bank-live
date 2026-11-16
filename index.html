@@ -91,7 +91,7 @@ footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22
 <main id="m"><div class="msg">טוען את השולחן…</div></main>
 <footer>צפייה בלבד · נבנה על ידי עידן בן אברהם</footer>
 <script type="module">
-import { dealerPeek, dealerMoment, allowImageFallback, setDealerSound, dealerEndSequence } from './js/dealers.js';
+import { dealerPeek, allowImageFallback, setDealerSound, dealerEndSequence } from './js/dealers.js';
 allowImageFallback(true);
 // קול: דפדפנים חוסמים קול עד שנוגעים במסך. בנגיעה הראשונה "פותחים" את כל הצלילים מראש.
 const SNDS = ['e_money','e_kiss','e_champ','e_wallet','e_tissue','e_clap','fx_glass','fx_splat','dl_peek1','dl_peek2','dl_walk','dl_wave','dl_duo1','dl_peek3','dl_duo3','dl_kiss','dl_card','dl_clap','dl_chips','dl_knock','dl_cards','dl_sides','a_slap','a_hooks','a_fog','a_garter'];
@@ -153,9 +153,8 @@ function status() {
   $st.textContent = `בשידור חי · עודכן ${s < 10 ? 'עכשיו' : s < 60 ? `לפני ${s} שניות` : `לפני ${Math.round(s / 60)} דק'`}`;
 }
 setInterval(status, 5000);
-setInterval(() => { if (introDone && data && data.st !== 'closed' && Date.now() - lastChange > 240000) { lastChange = Date.now(); dealerMoment('idle'); } }, 20000);
 
-let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0, endPending = null, lastPs = null, lastChange = Date.now();
+let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0, endPending = null;
 function maybePeek() {
   if (!introDone || !data) return;
   const e = data.e || 0;
@@ -174,28 +173,11 @@ function maybePeek() {
     else { firstPending = true; firstTimer = setTimeout(() => { if (firstPending) { firstPending = false; dealerPeek(); } }, 12000); }
     return;
   }
-  // רגעים במשחק: שחקן יצא → הגרטר; כניסה שלישית של שחקן (ואז כל 3) → האדים
-  const ps = data.p || [];
-  let moment = null;
-  if (lastPs) {
-    ps.forEach((p) => {
-      const o = lastPs[p.n]; if (!o) return;
-      if (o.st !== 'left' && p.st === 'left') moment = 'leave';
-      else if (!moment && p.e >= 3 && Math.floor(p.e / 3) > Math.floor(o.e / 3)) moment = 'rebuy';
-    });
-  }
-  if (!lastPs || ps.some((p) => !lastPs[p.n] || lastPs[p.n].e !== p.e || lastPs[p.n].st !== p.st)) lastChange = Date.now();
-  lastPs = Object.fromEntries(ps.map((p) => [p.n, { e: p.e, st: p.st }]));
-  if (moment) { since = 0; peekAt = Date.now(); setTimeout(() => dealerMoment(moment), 500 + Math.random() * 1500); lastE = e; return; }
   // לכל חבר קצב משלו: אחרי כל כניסה יש סיכוי של 1 ל-3 שתקפוץ דילרית (בממוצע כל 3 כניסות),
   // ולא יותר מ-5 כניסות בלי הצצה. ככה בכל כניסה זה קופץ אצל חבר אחר, לא לכולם ביחד.
   for (let k = lastE; k < e; k++) {
     since += 1;
-    if (since >= 5 || Math.random() < 1 / 3) {
-      since = 0; peekAt = Date.now();
-      setTimeout(() => (Math.random() < 0.25 ? dealerMoment('random') : dealerPeek()), 500 + Math.random() * 1500);
-      break;
-    }
+    if (since >= 5 || Math.random() < 1 / 3) { since = 0; peekAt = Date.now(); setTimeout(() => dealerPeek(), 500 + Math.random() * 1500); break; }
   }
   lastE = e;
 }
