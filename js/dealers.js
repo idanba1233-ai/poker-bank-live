@@ -34,6 +34,7 @@ let imgFallback = false;
 export function allowImageFallback(on) { imgFallback = on; }
 let idx = 0;
 let busy = false;
+let lastEnd = 0; // מתי הסתיים הקטע האחרון (למרווח בין הצצות)
 let base = '';
 
 export function setDealerBase(b) { base = b; }
@@ -73,9 +74,9 @@ function showClip(clip, onStart) {
     const end = () => {
       if (done) return; done = true;
       box.classList.remove('on');
-      setTimeout(() => { box.remove(); busy = false; resolve(true); }, 380);
+      setTimeout(() => { box.remove(); busy = false; lastEnd = Date.now(); resolve(true); }, 380);
     };
-    const started = () => { box.classList.add('on'); soundFn(clip.snd); onStart?.(); };
+    const started = () => { box.classList.add('on'); soundFn(clip.snd); onStart?.(box); };
     if (needImg()) {
       if (!imgFallback) { busy = false; resolve(false); return; }
       const im = new Image();
@@ -115,11 +116,11 @@ export function dealerPeek({ which } = {}) {
 const END = {
   win: [
     { id: 'money', src: 'vid/end_money', cls: 'dl-wave', dur: 2.65, snd: 'e_money' },                                // גשם של שטרות
-    { id: 'kiss', src: 'vid/end_kiss', cls: 'dl-wave', dur: 2.8, snd: 'e_kiss', fx: { type: 'lips', at: 1.3 } },     // נשיקה על המסך → שפתון
+    { id: 'kiss', src: 'vid/end_kiss', cls: 'dl-wave', dur: 2.8, snd: 'e_kiss', fx: { type: 'lips', at: 1.6, x: 0.59, y: 0.55, w: 0.15 } },     // נשיקה על המסך → שפתון במקום ובגודל של השפתיים שלה
     { id: 'champ', src: 'vid/end_champ', cls: 'dl-duo', dur: 5.65, snd: 'e_champ', fx: { type: 'crack', at: 2.25 } }, // פקק שמפניה → סדק
   ],
   lose: [
-    { id: 'wallet', src: 'vid/end_wallet', cls: 'dl-duo', dur: 3.25, snd: 'e_wallet', fx: { type: 'splat', at: 2.3 } }, // ארנק ריק → זבוב נמעך
+    { id: 'wallet', src: 'vid/end_wallet', cls: 'dl-duo', dur: 3.25, snd: 'e_wallet' }, // ארנק ריק
     { id: 'tissue', src: 'vid/end_tissue', cls: 'dl-duo', dur: 2.75, snd: 'e_tissue' },                                // ממחטות
     { id: 'clap', src: 'vid/end_clap', cls: 'dl-duo', dur: 3.6, snd: 'e_clap' },                                       // מחיאות כפיים עוקצניות
   ],
@@ -216,8 +217,9 @@ function splatSvg(w, h) {
     ${drops}
   </svg>`;
 }
-function lipsSvg(w, h) {
-  const cx = w * 0.5, cy = h * 0.58, sc = Math.min(w, h) / 230;
+function lipsSvg(w, h, pos) {
+  // pos: מרכז ורוחב השפתיים בפיקסלים של המסך (לפי מיקום הקטע). רוחב הציור הבסיסי ≈ 124
+  const cx = pos ? pos.cx : w * 0.5, cy = pos ? pos.cy : h * 0.58, sc = pos ? pos.w / 124 : Math.min(w, h) / 230;
   // סימן נשיקה אמיתי: שתי שפתיים נפרדות, קשת "קופידון" למעלה, שוליים כהים יותר וקמטים דקים
   const up = 'M-62,2 C-52,-10 -36,-26 -18,-26 C-10,-26 -4,-20 0,-15 C4,-20 10,-26 18,-26 C36,-26 52,-10 62,2 C44,-2 26,-6 12,-4 C6,-3 2,-1 0,-1 C-2,-1 -6,-3 -12,-4 C-26,-6 -44,-2 -62,2Z';
   const low = 'M-58,8 C-40,6 -20,8 0,9 C20,8 40,6 58,8 C50,26 30,40 0,42 C-30,40 -50,26 -58,8Z';
@@ -239,12 +241,29 @@ function lipsSvg(w, h) {
   </svg>`;
 }
 const FX_SOUND = { crack: 'fx_glass', splat: 'fx_splat', lips: null };
-function screenFx(type) {
+// מפעיל משהו ברגע מסוים בתוך הקטע, לפי הזמן האמיתי של הווידאו (לא לפי שעון), כדי שאפקט ייפול בדיוק על הפעולה
+function atClipTime(box, sec, fn) {
+  const v = box?.querySelector('video');
+  if (!v) { setTimeout(fn, sec * 1000); return; }
+  let done = false;
+  const fire = () => { if (done) return; done = true; fn(); };
+  const tick = () => { if (done) return; if (v.currentTime >= sec || v.ended || !box.isConnected) { fire(); return; } requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  setTimeout(fire, sec * 1000 + 2000); // ביטחון
+}
+
+// מיקום בתוך קופסת הקטע → פיקסלים במסך
+function boxPoint(box, fx) {
+  if (!box || fx.x == null) return null;
+  const r = box.getBoundingClientRect();
+  return { cx: r.left + r.width * fx.x, cy: r.top + r.height * fx.y, w: r.width * (fx.w || 0.15) };
+}
+function screenFx(type, box, fx = {}) {
   ensureEndCss();
   const w = innerWidth, h = innerHeight;
   const el = document.createElement('div');
   el.className = 'dl-fx dl-pop';
-  el.innerHTML = type === 'crack' ? crackSvg(w, h) : type === 'splat' ? splatSvg(w, h) : lipsSvg(w, h);
+  el.innerHTML = type === 'crack' ? crackSvg(w, h) : type === 'splat' ? splatSvg(w, h) : lipsSvg(w, h, boxPoint(box, fx));
   document.body.appendChild(el);
   soundFn(FX_SOUND[type]);
   if (type !== 'lips') { document.body.classList.add('dl-shake'); setTimeout(() => document.body.classList.remove('dl-shake'), 400); }
@@ -267,7 +286,7 @@ export async function dealerEnd(kind, { title, name, id }) {
   requestAnimationFrame(() => card.classList.add('on'));
   await new Promise((r) => setTimeout(r, 700));
   const timers = [];
-  const ok = await showClip(clip, () => { if (clip.fx) timers.push(setTimeout(() => screenFx(clip.fx.type), clip.fx.at * 1000)); });
+  const ok = await showClip(clip, (box) => { if (clip.fx) atClipTime(box, clip.fx.at, () => screenFx(clip.fx.type, box, clip.fx)); });
   card.classList.remove('on');
   setTimeout(() => card.remove(), 500);
   return ok;
@@ -278,6 +297,137 @@ export async function dealerEndSequence({ winner, loser }) {
   if (loser) await dealerEnd('lose', { title: '😢 המקום האחרון של הערב', name: loser });
   if (winner) { if (loser) await new Promise((r) => setTimeout(r, 500)); await dealerEnd('win', { title: '👑 אלוף הערב', name: winner }); }
 }
+
+// ======================================================================
+// קטעים לפי רגע במשחק: קטע + משפט "בשפתון" על המסך + אפקט שעובר מהקטע אל המסך
+// x/y/w = מיקום וגודל בתוך קופסת הקטע (0..1), at = שנייה בקטע
+// ======================================================================
+const MOMENTS = {
+  idle:   { src: 'vid/a_slap',   cls: 'dl-duo', dur: 5.0, snd: 'a_slap',   line: 'נו... תיכנס כבר 💋',          lineAt: 3.4 },
+  random: { src: 'vid/a_hooks',  cls: 'dl-duo', dur: 7.5, snd: 'a_hooks',  line: 'שים הכול בפנים 😉',           lineAt: 4.2 },
+  rebuy:  { src: 'vid/a_fog',    cls: 'dl-duo', dur: 7.0, snd: 'a_fog',    line: 'עוד פעם נכנסת? לא מתעייף? 😉', lineAt: 3.5,
+            fog: { at: 1.3 }, heart: { at: 1.75, dur: 1.6, x: 0.33, y: 0.6, w: 0.17 } },
+  leave:  { src: 'vid/a_garter', cls: 'dl-duo', dur: 6.9, snd: 'a_garter', line: 'מה, כבר גמרת? 😢',           lineAt: 4.8,
+            garter: { at: 4.25, x: 0.33, y: 0.5 } },
+};
+export const MOMENT_IDS = Object.keys(MOMENTS);
+
+const MOMENT_CSS = `
+@font-face{font-family:DlLip;font-weight:700;font-display:block;src:url(${'${BASE}'}fonts/amatic-sc-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+FB1D-FB4F}
+@font-face{font-family:DlLip;font-weight:700;font-display:block;src:url(${'${BASE}'}fonts/amatic-sc-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+.dl-line{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 24vh);transform:translateX(-50%) rotate(-4deg);z-index:154;pointer-events:none;width:min(88vw,520px);text-align:center;
+  font-family:DlLip,Heebo,system-ui,sans-serif;font-weight:700;direction:rtl;white-space:normal;font-size:min(15vw,76px);line-height:1;
+  color:#e0163a;-webkit-text-stroke:2.2px #c0102c;paint-order:stroke fill;text-shadow:0 2px 3px rgba(60,0,10,.55),0 0 16px rgba(0,0,0,.55);
+  clip-path:inset(0 0 0 100%);transition:clip-path 1.3s steps(14,end),opacity .8s ease}
+.dl-line.on{clip-path:inset(0 0 0 0)}
+.dl-line.out{opacity:0}
+.dl-fog{position:fixed;inset:0;z-index:153;pointer-events:none;opacity:0;transition:opacity .5s ease;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.dl-fog.on{opacity:1}.dl-fog.out{opacity:0;transition:opacity 1.6s ease}
+.dl-fog svg{position:absolute;inset:0;width:100%;height:100%}
+.dl-garter{position:fixed;left:0;top:0;z-index:154;pointer-events:none;width:min(62vw,300px);will-change:transform,opacity}
+`;
+function ensureMomentCss() {
+  ensureEndCss();
+  if (document.getElementById('dl-mom-css')) return;
+  const st = document.createElement('style'); st.id = 'dl-mom-css'; st.textContent = MOMENT_CSS.replaceAll('${BASE}', base);
+  document.head.appendChild(st);
+}
+
+function showLine(text, holdMs) {
+  const el = document.createElement('div');
+  el.className = 'dl-line'; el.textContent = text;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+  setTimeout(() => el.classList.add('out'), holdMs);
+  setTimeout(() => el.remove(), holdMs + 900);
+}
+
+// אדים על הזכוכית: ערפל לבנבן + לב שמצויר באצבע
+function showFog(box, m, clipLeftMs) {
+  const w = innerWidth, h = innerHeight;
+  const hp = boxPoint(box, m.heart) || { cx: w / 2, cy: h * 0.45, w: w * 0.3 };
+  const s = hp.w / 100; // לב בסיסי ברוחב ~100
+  const heart = 'M0,30 C-8,18 -50,4 -50,-22 C-50,-44 -22,-52 0,-30 C22,-52 50,-44 50,-22 C50,4 8,18 0,30Z';
+  const el = document.createElement('div');
+  el.className = 'dl-fog';
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs><radialGradient id="dlfg" cx="${hp.cx}" cy="${hp.cy}" r="${Math.max(w, h) * 0.75}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eef3f2" stop-opacity=".62"/><stop offset=".55" stop-color="#e6ecea" stop-opacity=".42"/><stop offset="1" stop-color="#dfe6e4" stop-opacity=".18"/></radialGradient>
+      <filter id="dlfb"><feGaussianBlur stdDeviation="1.2"/></filter></defs>
+    <rect width="${w}" height="${h}" fill="url(#dlfg)"/>
+    <g transform="translate(${hp.cx},${hp.cy}) scale(${s})">
+      <path class="hp" d="${heart}" fill="none" stroke="rgba(40,60,58,.55)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#dlfb)"
+        stroke-dasharray="320" stroke-dashoffset="320"/>
+    </g></svg>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('on'));
+  const hpEl = el.querySelector('.hp');
+  setTimeout(() => { hpEl.style.transition = `stroke-dashoffset ${m.heart.dur}s ease-in-out`; hpEl.style.strokeDashoffset = '0'; }, (m.heart.at - m.fog.at) * 1000);
+  const total = clipLeftMs + 1800;
+  setTimeout(() => el.classList.add('out'), total);
+  setTimeout(() => el.remove(), total + 1700);
+}
+
+function garterSvg() {
+  let beads = '';
+  for (let i = 0; i < 26; i++) { const a = (i / 26) * Math.PI * 2; beads += `<circle cx="${(100 + Math.cos(a) * 78).toFixed(1)}" cy="${(70 + Math.sin(a) * 40).toFixed(1)}" r="3.2" fill="#E3C04F"/>`; }
+  let lace = '';
+  for (let i = 0; i < 34; i++) { const a = (i / 34) * Math.PI * 2; lace += `<circle cx="${(100 + Math.cos(a) * 92).toFixed(1)}" cy="${(70 + Math.sin(a) * 52).toFixed(1)}" r="7" fill="none" stroke="#111" stroke-width="2.4"/>`; }
+  return `<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+    ${lace}
+    <ellipse cx="100" cy="70" rx="84" ry="46" fill="none" stroke="#151515" stroke-width="16"/>
+    <ellipse cx="100" cy="70" rx="84" ry="46" fill="none" stroke="#2a2a2a" stroke-width="4" stroke-dasharray="3 5"/>
+    ${beads}
+    <g transform="translate(100,118)">
+      <path d="M0,0 C-30,-22 -44,4 -26,12 C-14,18 -4,8 0,0Z" fill="#c0102c"/><path d="M0,0 C30,-22 44,4 26,12 C14,18 4,8 0,0Z" fill="#c0102c"/>
+      <path d="M-4,2 L-14,28 L-6,24 L0,30Z" fill="#9a0c24"/><path d="M4,2 L14,28 L6,24 L0,30Z" fill="#9a0c24"/>
+      <circle r="6" fill="#E3C04F"/>
+    </g></svg>`;
+}
+// גרטר שנורה מהיד של הדילרית ונתקע על המסך
+function showGarter(box, m) {
+  const el = document.createElement('div');
+  el.className = 'dl-garter';
+  el.innerHTML = garterSvg();
+  document.body.appendChild(el);
+  const gw = el.getBoundingClientRect().width || 260, gh = gw * 0.75;
+  const from = boxPoint(box, { ...m.garter, w: 0.1 }) || { cx: innerWidth * 0.4, cy: innerHeight * 0.7 };
+  const tx = innerWidth / 2 - gw / 2, ty = innerHeight * 0.42 - gh / 2;
+  const anim = el.animate([
+    { transform: `translate(${from.cx - gw / 2}px,${from.cy - gh / 2}px) scale(.18) rotate(-50deg)`, opacity: 1 },
+    { transform: `translate(${tx}px,${ty - 30}px) scale(1.15) rotate(8deg)`, opacity: 1, offset: 0.85 },
+    { transform: `translate(${tx}px,${ty}px) scale(1) rotate(-6deg)`, opacity: 1 },
+  ], { duration: 420, easing: 'cubic-bezier(.3,.1,.6,1)', fill: 'forwards' });
+  anim.onfinish = () => {
+    soundFn('dl_knock');
+    document.body.classList.add('dl-shake'); setTimeout(() => document.body.classList.remove('dl-shake'), 400);
+    try { navigator.vibrate?.([30, 20, 50]); } catch {}
+    setTimeout(() => {
+      el.animate([
+        { transform: `translate(${tx}px,${ty}px) scale(1) rotate(-6deg)`, opacity: 1 },
+        { transform: `translate(${tx}px,${ty + innerHeight * 0.06}px) scale(1) rotate(-14deg)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(${tx}px,${ty + innerHeight * 0.55}px) scale(.9) rotate(-30deg)`, opacity: 0 },
+      ], { duration: 1400, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove();
+    }, 2600);
+  };
+}
+
+// מציג קטע של רגע במשחק (idle / rebuy / leave / random)
+export function dealerMoment(id) {
+  const m = MOMENTS[id];
+  if (!m || busy || document.hidden) return Promise.resolve(false);
+  ensureMomentCss();
+  return showClip(m, (box) => {
+    const T = (sec, fn) => atClipTime(box, sec, fn);
+    if (m.fog) T(m.fog.at, () => showFog(box, m, (m.dur - m.fog.at) * 1000));
+    if (m.garter) T(m.garter.at, () => showGarter(box, m));
+    if (m.line) T(m.lineAt, () => showLine(m.line, (m.dur - m.lineAt) * 1000 + 2600));
+  });
+}
+
+// כמה זמן עבר מאז שהקטע האחרון נגמר (0 אם קטע רץ עכשיו)
+export function dealerQuietMs() { return busy ? 0 : (lastEnd ? Date.now() - lastEnd : Infinity); }
 
 // קטע מסוים לפי שם הקובץ (למשל לסוף הערב)
 export function dealerPeekByName(name) {
