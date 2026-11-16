@@ -273,10 +273,10 @@ export async function dealerEnd(kind, { title, name, id }) {
   return ok;
 }
 
-// כל רצף סוף הערב: קודם האלוף, אחר כך המקום האחרון
+// כל רצף סוף הערב: קודם המקום האחרון, ובסוף האלוף
 export async function dealerEndSequence({ winner, loser }) {
-  if (winner) await dealerEnd('win', { title: '👑 אלוף הערב', name: winner });
-  if (loser) { await new Promise((r) => setTimeout(r, 500)); await dealerEnd('lose', { title: '😢 המקום האחרון של הערב', name: loser }); }
+  if (loser) await dealerEnd('lose', { title: '😢 המקום האחרון של הערב', name: loser });
+  if (winner) { if (loser) await new Promise((r) => setTimeout(r, 500)); await dealerEnd('win', { title: '👑 אלוף הערב', name: winner }); }
 }
 
 // קטע מסוים לפי שם הקובץ (למשל לסוף הערב)
