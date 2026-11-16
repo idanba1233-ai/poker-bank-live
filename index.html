@@ -91,16 +91,17 @@ footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22
 <main id="m"><div class="msg">טוען את השולחן…</div></main>
 <footer>צפייה בלבד · נבנה על ידי עידן בן אברהם</footer>
 <script type="module">
-import { dealerPeek, allowImageFallback, setDealerSound } from './js/dealers.js';
+import { dealerPeek, allowImageFallback, setDealerSound, dealerEndSequence } from './js/dealers.js';
 allowImageFallback(true);
 // קול: דפדפנים חוסמים קול עד שנוגעים במסך. בנגיעה הראשונה "פותחים" את כל הצלילים מראש.
-const SNDS = ['dl_peek1','dl_peek2','dl_walk','dl_wave','dl_duo1','dl_peek3','dl_duo3','dl_kiss','dl_card','dl_clap','dl_chips','dl_knock','dl_cards','dl_sides'];
+const SNDS = ['e_money','e_kiss','e_champ','e_wallet','e_tissue','e_clap','fx_glass','fx_splat','dl_peek1','dl_peek2','dl_walk','dl_wave','dl_duo1','dl_peek3','dl_duo3','dl_kiss','dl_card','dl_clap','dl_chips','dl_knock','dl_cards','dl_sides'];
 const audios = {}; let soundOn = false, firstPending = false, firstTimer = null;
 function unlockSound() {
   if (soundOn) return; soundOn = true;
   SNDS.forEach((n) => { const a = new Audio(`sfx/${n}.mp3`); a.preload = 'auto'; a.muted = true; a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); audios[n] = a; });
   document.getElementById('sndbtn')?.remove();
   if (firstPending) { firstPending = false; clearTimeout(firstTimer); setTimeout(() => dealerPeek(), 500); }
+  if (endPending) { const f = endPending; endPending = null; setTimeout(f, 500); }
 }
 setDealerSound((n) => { const a = audios[n]; if (!a) return; try { a.currentTime = 0; a.play().catch(() => {}); } catch {} });
 ['pointerdown', 'touchend', 'click'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: false, passive: true }));
@@ -153,11 +154,19 @@ function status() {
 }
 setInterval(status, 5000);
 
-let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0;
+let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0, endPending = null;
 function maybePeek() {
   if (!introDone || !data) return;
   const e = data.e || 0;
-  if (data.st === 'closed') { if (!peekedClose) { peekedClose = true; setTimeout(() => dealerPeek(), 1200); } return; }
+  if (data.st === 'closed') {
+    if (!peekedClose && data.r && data.r.length) {
+      peekedClose = true;
+      const r = data.r; const top = r[0], last = r.length > 1 ? r[r.length - 1] : null;
+      const go = () => dealerEndSequence({ winner: top && top.f > 0 ? top.n : null, loser: last && last.f < 0 ? last.n : null });
+      if (soundOn) setTimeout(go, 1400); else { endPending = go; setTimeout(() => { if (endPending) { endPending = null; go(); } }, 12000); }
+    }
+    return;
+  }
   if (lastE == null) { // פעם ראשונה שנכנסים: מחכים ללחיצה על "הפעלת קולות" כדי שההצצה הראשונה תהיה עם קול
     lastE = e; peekAt = Date.now();
     if (soundOn) setTimeout(() => dealerPeek(), 900);
