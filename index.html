@@ -75,6 +75,47 @@ footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22
 .stage .ttl{position:absolute;top:5%;left:0;right:0;z-index:2;text-align:center;font-family:Frank,serif;font-weight:900;font-size:34px}
 #sndbtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:120;border:0;border-radius:999px;padding:12px 20px;font:800 15px Heebo,sans-serif;color:#1A1405;background:linear-gradient(180deg,#F8E58C,#E3C04F 45%,#B8901F);box-shadow:0 8px 22px rgba(0,0,0,.5);animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{50%{transform:translateX(-50%) scale(1.05)}}
+
+/* ===== מצב טלוויזיה / מקרן (כתובת /tv/<שם>/) ===== */
+body.tv{max-width:none;padding:3vh 3.5vw 2vh;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body.tv header{margin-bottom:2vh}
+body.tv header img{width:7vh;height:7vh}
+body.tv h1{font-size:5.4vh}
+body.tv .live{font-size:2.2vh}
+body.tv .dot{width:1.4vh;height:1.4vh}
+body.tv footer{font-size:1.8vh;margin-top:1vh}
+body.tv #m{flex:1;min-height:0}
+.tvg{display:grid;grid-template-columns:1.25fr 1fr;gap:2.5vw;height:100%;min-height:0}
+.tvside{display:flex;flex-direction:column;gap:2.4vh;min-height:0}
+.tvbox{padding:3vh 2.4vw;flex:1;display:flex;flex-direction:column;justify-content:center}
+.tvlist2{display:flex;flex-direction:column;gap:.8vh;padding:1.2vh}
+.tvlist2 .tvp{padding:.6vh 1.4vw}
+.tvbox .k{font-size:2.6vh}
+.tvpot{font-size:13vh;font-weight:800;line-height:1;white-space:nowrap;margin:1vh 0}
+.tvclock{font-size:10vh;font-weight:800;line-height:1;direction:ltr;text-align:right;font-variant-numeric:tabular-nums;color:var(--txt)}
+.tvsub{font-size:2.6vh;color:var(--mut)}
+.tvlist{display:grid;grid-auto-rows:minmax(0,1fr);gap:1.2vh;height:100%;min-height:0;padding:1.6vh}
+.tvp{display:flex;align-items:center;gap:1.6vw;padding:0 1.6vw;border-radius:1.6vh;background:rgba(255,255,255,.03);min-height:0}
+.tvp.left{opacity:.5}
+.tvp .av{width:var(--sz);height:var(--sz);font-size:calc(var(--sz) * .42)}
+.tvp .nm{font-size:calc(var(--sz) * .5);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvp .n{font-size:calc(var(--sz) * .78);min-width:2ch}
+.tvp .badge{font-size:calc(var(--sz) * .26)}
+.tvidle{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;text-align:center}
+.tvidle img{width:22vh;height:22vh;filter:drop-shadow(0 0 4vh rgba(227,192,79,.45));animation:tvb 4s ease-in-out infinite}
+@keyframes tvb{50%{transform:scale(1.05)}}
+.tvidle .t{font-family:Frank,serif;font-weight:900;font-size:9vh}
+.tvidle .s{font-size:3.4vh;color:var(--mut)}
+.tvend{display:grid;grid-template-columns:1fr 1.1fr;gap:2.5vw;height:100%;min-height:0}
+.tvend .stage{margin:0;height:100%;aspect-ratio:auto;border-radius:3vh}
+.tvend .stage .ttl{font-size:7vh}
+.tvend .stage .crown{width:14vh}
+.tvend .stage .av{width:15vh!important;height:15vh!important;font-size:6vh!important}
+.tvend .stage .nm{font-size:5vh!important}
+.tvend .stage .amt{font-size:5vh!important}
+.tvres{display:flex;flex-direction:column;gap:1.4vh;min-height:0;overflow:hidden}
+.tvres h2{font-size:3vh;margin:0 0 .6vh}
+.tvres .tr{font-size:3vh;padding:1.2vh 1.6vw}
 </style>
 </head>
 <body>
@@ -104,9 +145,12 @@ function unlockSound() {
   if (endPending) { const f = endPending; endPending = null; setTimeout(f, 500); }
 }
 setDealerSound((n) => { const a = audios[n]; if (!a) return; try { a.currentTime = 0; a.play().catch(() => {}); } catch {} });
-['pointerdown', 'touchend', 'click'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: false, passive: true }));
+['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: false, passive: true }));
 const DB = 'https://poker-bank-live-36384-default-rtdb.europe-west1.firebasedatabase.app';
-const id = (location.hash || '').slice(1).replace(/[^A-Za-z0-9]/g, '');
+const TVM = /\/tv\/[a-z0-9]+\/?/.test(location.pathname);
+const TVN = TVM ? location.pathname.match(/\/tv\/([a-z0-9]+)/)[1] : null;
+if (TVM) { document.body.classList.add('tv'); document.querySelector('.itap').textContent = '👆 לחצו OK בשלט להפעלת צלילים'; document.getElementById('sndbtn').textContent = '🔊 לחצו OK בשלט'; }
+const id = TVM ? 'tv-' + TVN : (location.hash || '').slice(1).replace(/[^A-Za-z0-9]/g, '');
 const $m = document.getElementById('m'), $st = document.getElementById('st'), $dot = document.getElementById('dot');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nf = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 });
@@ -115,7 +159,48 @@ const cls = (v) => (v > 0 ? 'win' : v < 0 ? 'loss' : '');
 const tf = new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit' });
 let data = null, prev = {}, lastAt = 0, connected = false;
 
+const clk = (ms) => { const m = Math.max(0, Math.floor(ms / 60000)); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+function renderTv() {
+  if (!data || data.st === 'idle' || !data.p) {
+    $m.innerHTML = `<div class="tvidle"><img src="img/logo.webp" alt=""><div class="t gtxt">מחכים לערב הבא</div><div class="s">כשהבנקאי יפתח ערב באפליקציה, השולחן יופיע כאן לבד</div></div>`;
+    return;
+  }
+  const ps = data.p || [];
+  if (data.st === 'closed' && data.r) {
+    const top = data.r[0];
+    const tr = data.mode === 'paybox'
+      ? `<h2>משלמים לקבוצת הפייבוקס</h2><div class="card">${(data.pay || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>`
+      : `<h2>מי משלם למי</h2><div class="card">${(data.tr || []).length ? data.tr.map((t) => `<div class="tr"><span>${esc(t.f)} ← ${esc(t.t)}</span><b>${money(t.a)}</b></div>`).join('') : '<div class="tr"><span>אין העברות</span></div>'}</div>`;
+    const n = data.r.length, sz = Math.max(3.2, Math.min(6.5, 40 / Math.max(n, 1)));
+    $m.innerHTML = `<div class="tvend">
+      <div class="stage">${top && top.f > 0 ? `<div class="ttl gtxt">אלוף הערב</div><div class="sw">
+        <img class="crown" src="img/crown.webp" alt="">
+        <div class="av" style="--c:${esc(top.c)}">${esc(top.n.charAt(0))}</div>
+        <div class="nm" style="margin-top:1vh;text-shadow:0 2px 8px #000">${esc(top.n)}</div>
+        <div class="amt win" style="text-align:center;min-width:0;text-shadow:0 2px 8px #000">${money(top.f, true)}</div></div>` : ''}</div>
+      <div class="tvres"><h2>הערב נסגר · רווח והפסד</h2>
+        <div class="card tvlist2" style="--sz:${sz}vh">${data.r.map((r) => `<div class="tvp"><div class="av" style="--c:${esc(r.c)}">${esc(r.n.charAt(0))}</div><div class="nm">${esc(r.n)}</div><div class="amt ${cls(r.f)}" style="font-size:calc(var(--sz) * .5)">${money(r.f, true)}</div></div>`).join('')}</div>
+        ${tr}</div></div>`;
+    return;
+  }
+  const n = ps.length, sz = Math.max(4.5, Math.min(9, 70 / Math.max(n, 1)));
+  $m.innerHTML = `<div class="tvg">
+    <div class="card tvlist" style="--sz:${sz}vh">${ps.map((p, i) => `<div class="tvp ${p.st === 'left' ? 'left' : ''}" data-i="${i}">
+      <div class="av" style="--c:${esc(p.c)}">${esc(p.n.charAt(0))}</div>
+      <div class="nm">${esc(p.n)}${p.st === 'left' ? '<span class="badge">יצא</span>' : ''}</div>
+      <div class="n gtxt">${p.e}</div></div>`).join('')}</div>
+    <div class="tvside">
+      <div class="card tvbox"><div class="k">הקופה</div><div class="tvpot gtxt">${money(data.pot || 0)}</div>
+        <div class="tvsub">${data.e || 0} כניסות · ${ps.filter((p) => p.st !== 'left').length} משחקים</div></div>
+      <div class="card tvbox"><div class="k">משחקים כבר</div><div class="tvclock" data-clock>${clk(Date.now() - data.s)}</div>
+        <div class="tvsub">התחלנו ב-${tf.format(data.s)}</div></div>
+    </div></div>`;
+  ps.forEach((p, i) => { if (prev[p.n] != null && prev[p.n] !== p.e) $m.querySelector(`[data-i="${i}"]`)?.classList.add('flash'); });
+  prev = Object.fromEntries(ps.map((p) => [p.n, p.e]));
+}
+if (TVM) setInterval(() => { const c = document.querySelector('[data-clock]'); if (c && data?.s) c.textContent = clk(Date.now() - data.s); }, 15000);
 function render() {
+  if (TVM) return renderTv();
   if (!data) { $m.innerHTML = '<div class="msg">הקישור הזה כבר לא פעיל.<br>בקשו מהבנקאי קישור חדש.</div>'; return; }
   const ps = data.p || [];
   if (data.st === 'closed' && data.r) {
@@ -149,14 +234,17 @@ function status() {
   if (!connected) { $dot.className = 'dot off'; $st.textContent = 'מנסה להתחבר…'; return; }
   $dot.className = data?.st === 'closed' ? 'dot off' : 'dot';
   if (data?.st === 'closed') { $st.textContent = 'הערב הסתיים'; return; }
+  if (!data || data.st === 'idle') { $dot.className = 'dot off'; $st.textContent = TVM ? 'ממתין לערב' : 'מתחבר…'; return; }
   const s = Math.round((Date.now() - (data?.t || Date.now())) / 1000);
   $st.textContent = `בשידור חי · עודכן ${s < 10 ? 'עכשיו' : s < 60 ? `לפני ${s} שניות` : `לפני ${Math.round(s / 60)} דק'`}`;
 }
 setInterval(status, 5000);
 
 let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0, endPending = null;
+let gameKey = null;
 function maybePeek() {
-  if (!introDone || !data) return;
+  if (!introDone || !data || data.st === 'idle') return;
+  if (data.s !== gameKey) { gameKey = data.s; lastE = null; peekedClose = false; since = 0; prev = {}; }
   const e = data.e || 0;
   if (data.st === 'closed') {
     if (!peekedClose && data.r && data.r.length) {

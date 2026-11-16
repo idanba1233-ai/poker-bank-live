@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<base href="/poker-bank-live/">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100C">
+<meta name="robots" content="noindex">
+<title>Poker Bank · שידור חי</title>
+<style>
+@font-face{font-family:Heebo;font-weight:500;font-display:swap;src:url(fonts/heebo-hebrew-500-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
+@font-face{font-family:Heebo;font-weight:500;font-display:swap;src:url(fonts/heebo-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
+@font-face{font-family:Heebo;font-weight:800;font-display:swap;src:url(fonts/heebo-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
+@font-face{font-family:Heebo;font-weight:800;font-display:swap;src:url(fonts/heebo-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
+@font-face{font-family:Frank;font-weight:900;font-display:swap;src:url(fonts/frank-ruhl-libre-latin-900-normal.woff2) format('woff2');unicode-range:U+0000-00FF}
+@font-face{font-family:Frank;font-weight:900;font-display:swap;src:url(fonts/frank-ruhl-libre-hebrew-900-normal.woff2) format('woff2');unicode-range:U+0590-05FF}
+:root{--gold1:#FBEFA8;--gold:#E3C04F;--gold3:#B8901F;--txt:#F5F2EA;--mut:#A9B3AE;--win:#5BE58F;--loss:#FF7D7D}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#07100C;color:var(--txt);font-family:Heebo,system-ui,sans-serif;min-height:100%;-webkit-text-size-adjust:100%}
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(5,10,8,.35),rgba(5,10,8,.92)),url(img/bg.webp) center top/cover no-repeat}
+body{padding:calc(env(safe-area-inset-top) + 16px) max(14px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 40px) max(14px,env(safe-area-inset-left));max-width:560px;margin:0 auto}
+.gtxt{background:linear-gradient(180deg,var(--gold1),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+header img{width:52px;height:52px}
+h1{font-family:Frank,serif;font-weight:900;font-size:30px;line-height:1;direction:ltr}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);margin-top:4px}
+.dot{width:9px;height:9px;border-radius:50%;background:#5BE58F;box-shadow:0 0 10px #5BE58F;animation:p 1.6s infinite}
+.dot.off{background:#FF9E6B;box-shadow:0 0 10px #FF9E6B}
+@keyframes p{50%{opacity:.35}}
+.card{background:linear-gradient(180deg,rgba(24,34,29,.92),rgba(12,18,15,.92));border:1px solid rgba(227,192,79,.28);border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.pot{padding:18px 20px;margin-bottom:12px}
+.potrow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.k{font-size:14px;color:var(--mut);letter-spacing:.06em}
+.money{font-size:clamp(34px,11vw,46px);font-weight:800;line-height:1.05;white-space:nowrap}
+.list>div{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.list>div:last-child{border-bottom:0}
+.av{width:48px;height:48px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Heebo;font-weight:800;font-size:20px;color:var(--gold1);
+  background:radial-gradient(circle at 35% 30%,var(--c),#0b0b0b 90%);box-shadow:0 0 0 3px #C9A23A,0 0 0 4px #6d5313}
+.nm{font-weight:800;font-size:18px;overflow-wrap:anywhere}
+.sub{font-size:13px;color:var(--mut)}
+.n{font-size:28px;font-weight:800;min-width:40px;text-align:center}
+.amt{font-weight:800;font-size:18px;direction:ltr;text-align:left;min-width:92px}
+.win{color:var(--win)}.loss{color:var(--loss)}
+.badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--mut);margin-inline-start:6px}
+.left{opacity:.6}
+.flash{animation:f 1.2s ease}
+@keyframes f{0%{background:rgba(227,192,79,.35)}100%{background:transparent}}
+h2{font-size:15px;color:var(--mut);margin:18px 4px 8px}
+.msg{text-align:center;color:var(--mut);padding:60px 20px;font-size:17px;line-height:1.6}
+.tr{display:flex;justify-content:space-between;padding:12px 16px;font-size:17px;font-weight:700}
+.tr b{color:var(--gold1);direction:ltr}
+footer{text-align:center;color:rgba(227,192,79,.65);font-size:12px;margin-top:22px}
+.champ{padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;border-color:rgba(227,192,79,.6)}
+
+/* פתיחה (כמו באפליקציה) */
+#intro{position:fixed;inset:0;z-index:200;background:#050706;display:flex;flex-direction:column;align-items:center;transition:opacity .6s ease;overflow:hidden}
+#intro.out{opacity:0;pointer-events:none}
+#intro .iphoto{position:absolute;inset:0;background:url(img/intro_bg.webp) 62% center/cover no-repeat;opacity:0;transform:scale(1.12);animation:iphoto 5s cubic-bezier(.25,.6,.3,1) forwards}
+@keyframes iphoto{0%{opacity:0;transform:scale(1.12)}22%{opacity:1}100%{opacity:1;transform:scale(1)}}
+#intro .ishade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,7,6,.55) 0%,rgba(5,7,6,0) 30%,rgba(5,7,6,0) 72%,rgba(5,7,6,.85) 100%)}
+#intro .itop{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:calc(env(safe-area-inset-top) + 7vh)}
+#intro .ichip{width:112px;height:112px;animation:ispin 1.15s .35s cubic-bezier(.2,.9,.25,1) both;filter:drop-shadow(0 14px 24px rgba(0,0,0,.85)) drop-shadow(0 0 26px rgba(227,192,79,.5))}
+@keyframes ispin{0%{transform:translateY(-140px) rotateY(1080deg) scale(.25);opacity:0}60%{opacity:1}85%{transform:translateY(8px) scale(1.04)}100%{transform:none}}
+#intro .ititle{font-family:Frank,serif;font-weight:900;font-size:44px;margin-top:8px;direction:ltr;opacity:0;animation:iup .7s 1.6s ease forwards;filter:drop-shadow(0 3px 10px rgba(0,0,0,.9))}
+#intro .itag{font-size:12px;letter-spacing:5px;color:#E9E1C6;opacity:0;animation:iup .7s 1.85s ease forwards;text-shadow:0 2px 8px #000}
+#intro .icredit{position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));font-size:15px;color:#E9E1C6;opacity:0;animation:iup .8s 2.4s ease forwards;text-shadow:0 2px 10px #000}
+#intro .icredit b{color:#E3C04F}
+#intro .itap{position:absolute;bottom:calc(78px + env(safe-area-inset-bottom));padding:9px 16px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid rgba(227,192,79,.5);font-size:14px;font-weight:800;color:#FBEFA8;opacity:0;animation:iup .6s 1s ease forwards}
+@keyframes iup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* במה בסוף הערב */
+.stage{position:relative;margin:0 -14px 12px;aspect-ratio:1080/1935;background:url(img/stage2.webp) center bottom/cover no-repeat;border-radius:0 0 26px 26px;overflow:hidden}
+.stage::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,16,12,.6),rgba(7,16,12,0) 25%,rgba(7,16,12,0) 60%,rgba(7,16,12,.9))}
+.stage .sw{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;width:46%}
+.stage .crown{width:84px;margin-bottom:-12px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));animation:drop .8s .3s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{transform:translateY(-120px) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+.stage .ttl{position:absolute;top:5%;left:0;right:0;z-index:2;text-align:center;font-family:Frank,serif;font-weight:900;font-size:34px}
+#sndbtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:120;border:0;border-radius:999px;padding:12px 20px;font:800 15px Heebo,sans-serif;color:#1A1405;background:linear-gradient(180deg,#F8E58C,#E3C04F 45%,#B8901F);box-shadow:0 8px 22px rgba(0,0,0,.5);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.05)}}
+
+/* ===== מצב טלוויזיה / מקרן (כתובת /tv/<שם>/) ===== */
+body.tv{max-width:none;padding:3vh 3.5vw 2vh;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body.tv header{margin-bottom:2vh}
+body.tv header img{width:7vh;height:7vh}
+body.tv h1{font-size:5.4vh}
+body.tv .live{font-size:2.2vh}
+body.tv .dot{width:1.4vh;height:1.4vh}
+body.tv footer{font-size:1.8vh;margin-top:1vh}
+body.tv #m{flex:1;min-height:0}
+.tvg{display:grid;grid-template-columns:1.25fr 1fr;gap:2.5vw;height:100%;min-height:0}
+.tvside{display:flex;flex-direction:column;gap:2.4vh;min-height:0}
+.tvbox{padding:3vh 2.4vw;flex:1;display:flex;flex-direction:column;justify-content:center}
+.tvlist2{display:flex;flex-direction:column;gap:.8vh;padding:1.2vh}
+.tvlist2 .tvp{padding:.6vh 1.4vw}
+.tvbox .k{font-size:2.6vh}
+.tvpot{font-size:13vh;font-weight:800;line-height:1;white-space:nowrap;margin:1vh 0}
+.tvclock{font-size:10vh;font-weight:800;line-height:1;direction:ltr;text-align:right;font-variant-numeric:tabular-nums;color:var(--txt)}
+.tvsub{font-size:2.6vh;color:var(--mut)}
+.tvlist{display:grid;grid-auto-rows:minmax(0,1fr);gap:1.2vh;height:100%;min-height:0;padding:1.6vh}
+.tvp{display:flex;align-items:center;gap:1.6vw;padding:0 1.6vw;border-radius:1.6vh;background:rgba(255,255,255,.03);min-height:0}
+.tvp.left{opacity:.5}
+.tvp .av{width:var(--sz);height:var(--sz);font-size:calc(var(--sz) * .42)}
+.tvp .nm{font-size:calc(var(--sz) * .5);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvp .n{font-size:calc(var(--sz) * .78);min-width:2ch}
+.tvp .badge{font-size:calc(var(--sz) * .26)}
+.tvidle{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;text-align:center}
+.tvidle img{width:22vh;height:22vh;filter:drop-shadow(0 0 4vh rgba(227,192,79,.45));animation:tvb 4s ease-in-out infinite}
+@keyframes tvb{50%{transform:scale(1.05)}}
+.tvidle .t{font-family:Frank,serif;font-weight:900;font-size:9vh}
+.tvidle .s{font-size:3.4vh;color:var(--mut)}
+.tvend{display:grid;grid-template-columns:1fr 1.1fr;gap:2.5vw;height:100%;min-height:0}
+.tvend .stage{margin:0;height:100%;aspect-ratio:auto;border-radius:3vh}
+.tvend .stage .ttl{font-size:7vh}
+.tvend .stage .crown{width:14vh}
+.tvend .stage .av{width:15vh!important;height:15vh!important;font-size:6vh!important}
+.tvend .stage .nm{font-size:5vh!important}
+.tvend .stage .amt{font-size:5vh!important}
+.tvres{display:flex;flex-direction:column;gap:1.4vh;min-height:0;overflow:hidden}
+.tvres h2{font-size:3vh;margin:0 0 .6vh}
+.tvres .tr{font-size:3vh;padding:1.2vh 1.6vw}
+</style>
+</head>
+<body>
+<div id="intro"><div class="iphoto"></div><div class="ishade"></div>
+  <div class="itop"><img class="ichip" src="img/logo.webp" alt=""><div class="ititle gtxt">Poker Bank</div><div class="itag">THE HOME GAME BANK</div></div>
+  <div class="itap">👆 לחץ על המסך</div>
+  <div class="icredit">נבנה על ידי <b>עידן בן אברהם</b></div></div>
+<header>
+  <img src="img/logo.webp" alt="">
+  <div style="flex:1"><h1 class="gtxt">Poker Bank</h1>
+  <div class="live"><span class="dot" id="dot"></span><span id="st">מתחבר…</span></div></div>
+</header>
+<button id="sndbtn" type="button">👆 לחץ כאן</button>
+<main id="m"><div class="msg">טוען את השולחן…</div></main>
+<footer>צפייה בלבד · נבנה על ידי עידן בן אברהם</footer>
+<script type="module">
+import { dealerPeek, allowImageFallback, setDealerSound, dealerEndSequence } from './js/dealers.js';
+allowImageFallback(true);
+// קול: דפדפנים חוסמים קול עד שנוגעים במסך. בנגיעה הראשונה "פותחים" את כל הצלילים מראש.
+const SNDS = ['e_money','e_kiss','e_champ','e_wallet','e_tissue','e_clap','fx_glass','fx_splat','dl_peek1','dl_peek2','dl_walk','dl_wave','dl_duo1','dl_peek3','dl_duo3','dl_kiss','dl_card','dl_clap','dl_chips','dl_knock','dl_cards','dl_sides','a_slap','a_hooks','a_fog','a_garter'];
+const audios = {}; let soundOn = false, firstPending = false, firstTimer = null;
+function unlockSound() {
+  if (soundOn) return; soundOn = true;
+  SNDS.forEach((n) => { const a = new Audio(`sfx/${n}.mp3`); a.preload = 'auto'; a.muted = true; a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); audios[n] = a; });
+  document.getElementById('sndbtn')?.remove();
+  if (firstPending) { firstPending = false; clearTimeout(firstTimer); setTimeout(() => dealerPeek(), 500); }
+  if (endPending) { const f = endPending; endPending = null; setTimeout(f, 500); }
+}
+setDealerSound((n) => { const a = audios[n]; if (!a) return; try { a.currentTime = 0; a.play().catch(() => {}); } catch {} });
+['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: false, passive: true }));
+const DB = 'https://poker-bank-live-36384-default-rtdb.europe-west1.firebasedatabase.app';
+const TVM = /\/tv\/[a-z0-9]+\/?/.test(location.pathname);
+const TVN = TVM ? location.pathname.match(/\/tv\/([a-z0-9]+)/)[1] : null;
+if (TVM) { document.body.classList.add('tv'); document.querySelector('.itap').textContent = '👆 לחצו OK בשלט להפעלת צלילים'; document.getElementById('sndbtn').textContent = '🔊 לחצו OK בשלט'; }
+const id = TVM ? 'tv-' + TVN : (location.hash || '').slice(1).replace(/[^A-Za-z0-9]/g, '');
+const $m = document.getElementById('m'), $st = document.getElementById('st'), $dot = document.getElementById('dot');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nf = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 });
+const money = (a, plus) => `${a < 0 ? '−' : plus && a > 0 ? '+' : ''}${nf.format(Math.abs(a) / 100)} ₪`;
+const cls = (v) => (v > 0 ? 'win' : v < 0 ? 'loss' : '');
+const tf = new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit' });
+let data = null, prev = {}, lastAt = 0, connected = false;
+
+const clk = (ms) => { const m = Math.max(0, Math.floor(ms / 60000)); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+function renderTv() {
+  if (!data || data.st === 'idle' || !data.p) {
+    $m.innerHTML = `<div class="tvidle"><img src="img/logo.webp" alt=""><div class="t gtxt">מחכים לערב הבא</div><div class="s">כשהבנקאי יפתח ערב באפליקציה, השולחן יופיע כאן לבד</div></div>`;
+    return;
+  }
+  const ps = data.p || [];
+  if (data.st === 'closed' && data.r) {
+    const top = data.r[0];
+    const tr = data.mode === 'paybox'
+      ? `<h2>משלמים לקבוצת הפייבוקס</h2><div class="card">${(data.pay || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>`
+      : `<h2>מי משלם למי</h2><div class="card">${(data.tr || []).length ? data.tr.map((t) => `<div class="tr"><span>${esc(t.f)} ← ${esc(t.t)}</span><b>${money(t.a)}</b></div>`).join('') : '<div class="tr"><span>אין העברות</span></div>'}</div>`;
+    const n = data.r.length, sz = Math.max(3.2, Math.min(6.5, 40 / Math.max(n, 1)));
+    $m.innerHTML = `<div class="tvend">
+      <div class="stage">${top && top.f > 0 ? `<div class="ttl gtxt">אלוף הערב</div><div class="sw">
+        <img class="crown" src="img/crown.webp" alt="">
+        <div class="av" style="--c:${esc(top.c)}">${esc(top.n.charAt(0))}</div>
+        <div class="nm" style="margin-top:1vh;text-shadow:0 2px 8px #000">${esc(top.n)}</div>
+        <div class="amt win" style="text-align:center;min-width:0;text-shadow:0 2px 8px #000">${money(top.f, true)}</div></div>` : ''}</div>
+      <div class="tvres"><h2>הערב נסגר · רווח והפסד</h2>
+        <div class="card tvlist2" style="--sz:${sz}vh">${data.r.map((r) => `<div class="tvp"><div class="av" style="--c:${esc(r.c)}">${esc(r.n.charAt(0))}</div><div class="nm">${esc(r.n)}</div><div class="amt ${cls(r.f)}" style="font-size:calc(var(--sz) * .5)">${money(r.f, true)}</div></div>`).join('')}</div>
+        ${tr}</div></div>`;
+    return;
+  }
+  const n = ps.length, sz = Math.max(4.5, Math.min(9, 70 / Math.max(n, 1)));
+  $m.innerHTML = `<div class="tvg">
+    <div class="card tvlist" style="--sz:${sz}vh">${ps.map((p, i) => `<div class="tvp ${p.st === 'left' ? 'left' : ''}" data-i="${i}">
+      <div class="av" style="--c:${esc(p.c)}">${esc(p.n.charAt(0))}</div>
+      <div class="nm">${esc(p.n)}${p.st === 'left' ? '<span class="badge">יצא</span>' : ''}</div>
+      <div class="n gtxt">${p.e}</div></div>`).join('')}</div>
+    <div class="tvside">
+      <div class="card tvbox"><div class="k">הקופה</div><div class="tvpot gtxt">${money(data.pot || 0)}</div>
+        <div class="tvsub">${data.e || 0} כניסות · ${ps.filter((p) => p.st !== 'left').length} משחקים</div></div>
+      <div class="card tvbox"><div class="k">משחקים כבר</div><div class="tvclock" data-clock>${clk(Date.now() - data.s)}</div>
+        <div class="tvsub">התחלנו ב-${tf.format(data.s)}</div></div>
+    </div></div>`;
+  ps.forEach((p, i) => { if (prev[p.n] != null && prev[p.n] !== p.e) $m.querySelector(`[data-i="${i}"]`)?.classList.add('flash'); });
+  prev = Object.fromEntries(ps.map((p) => [p.n, p.e]));
+}
+if (TVM) setInterval(() => { const c = document.querySelector('[data-clock]'); if (c && data?.s) c.textContent = clk(Date.now() - data.s); }, 15000);
+function render() {
+  if (TVM) return renderTv();
+  if (!data) { $m.innerHTML = '<div class="msg">הקישור הזה כבר לא פעיל.<br>בקשו מהבנקאי קישור חדש.</div>'; return; }
+  const ps = data.p || [];
+  if (data.st === 'closed' && data.r) {
+    const top = data.r[0];
+    const tr = data.mode === 'paybox'
+      ? `<h2>משלמים לקבוצת הפייבוקס</h2><div class="card">${(data.pay || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>
+         <h2>הקבוצה מעבירה</h2><div class="card">${(data.get || []).map((x) => `<div class="tr"><span>${esc(x.n)}</span><b>${money(x.a)}</b></div>`).join('')}</div>`
+      : `<h2>מי משלם למי</h2><div class="card">${(data.tr || []).length ? data.tr.map((t) => `<div class="tr"><span>${esc(t.f)} ← ${esc(t.t)}</span><b>${money(t.a)}</b></div>`).join('') : '<div class="tr"><span>אין העברות</span></div>'}</div>`;
+    $m.innerHTML = `${top && top.f > 0 ? `<div class="stage"><div class="ttl gtxt">אלוף הערב</div><div class="sw">
+        <img class="crown" src="img/crown.webp" alt="">
+        <div class="av" style="--c:${esc(top.c)};width:86px;height:86px;font-size:36px">${esc(top.n.charAt(0))}</div>
+        <div class="nm" style="font-size:24px;margin-top:6px;text-shadow:0 2px 8px #000">${esc(top.n)}</div>
+        <div class="amt win" style="font-size:24px;text-align:center;min-width:0;text-shadow:0 2px 8px #000">${money(top.f, true)}</div></div></div>` : ''}
+      <h2>הערב נסגר · רווח והפסד</h2>
+      <div class="card list">${data.r.map((r) => `<div><div class="av" style="--c:${esc(r.c)}">${esc(r.n.charAt(0))}</div><div style="flex:1" class="nm">${esc(r.n)}</div><div class="amt ${cls(r.f)}">${money(r.f, true)}</div></div>`).join('')}</div>${tr}`;
+    return;
+  }
+  $m.innerHTML = `<div class="card pot"><div class="k">הקופה</div><div class="money gtxt">${money(data.pot || 0)}</div>
+      <div class="potrow"><span class="sub">${data.e || 0} כניסות · ${ps.filter((p) => p.st !== 'left').length} משחקים</span>
+      <span class="sub">התחלנו ב-${tf.format(data.s)}</span></div></div>
+    <div class="card list">${ps.map((p, i) => `<div class="${p.st === 'left' ? 'left' : ''}" data-i="${i}">
+      <div class="av" style="--c:${esc(p.c)}">${esc(p.n.charAt(0))}</div>
+      <div style="flex:1;min-width:0"><div class="nm">${esc(p.n)}${p.st === 'left' ? '<span class="badge">יצא</span>' : ''}</div>
+      <div class="sub">${money(p.e * (data.price || 0))}</div></div>
+      <div class="n gtxt">${p.e}</div></div>`).join('')}</div>`;
+  ps.forEach((p, i) => { if (prev[p.n] != null && prev[p.n] !== p.e) $m.querySelector(`[data-i="${i}"]`)?.classList.add('flash'); });
+  prev = Object.fromEntries(ps.map((p) => [p.n, p.e]));
+}
+
+function status() {
+  if (!connected) { $dot.className = 'dot off'; $st.textContent = 'מנסה להתחבר…'; return; }
+  $dot.className = data?.st === 'closed' ? 'dot off' : 'dot';
+  if (data?.st === 'closed') { $st.textContent = 'הערב הסתיים'; return; }
+  if (!data || data.st === 'idle') { $dot.className = 'dot off'; $st.textContent = TVM ? 'ממתין לערב' : 'מתחבר…'; return; }
+  const s = Math.round((Date.now() - (data?.t || Date.now())) / 1000);
+  $st.textContent = `בשידור חי · עודכן ${s < 10 ? 'עכשיו' : s < 60 ? `לפני ${s} שניות` : `לפני ${Math.round(s / 60)} דק'`}`;
+}
+setInterval(status, 5000);
+
+let introDone = false, lastE = null, peekedClose = false, since = 0, peekAt = 0, endPending = null;
+let gameKey = null;
+function maybePeek() {
+  if (!introDone || !data || data.st === 'idle') return;
+  if (data.s !== gameKey) { gameKey = data.s; lastE = null; peekedClose = false; since = 0; prev = {}; }
+  const e = data.e || 0;
+  if (data.st === 'closed') {
+    if (!peekedClose && data.r && data.r.length) {
+      peekedClose = true;
+      const r = data.r; const top = r[0], last = r.length > 1 ? r[r.length - 1] : null;
+      const go = () => dealerEndSequence({ winner: top && top.f > 0 ? top.n : null, loser: last && last.f < 0 ? last.n : null });
+      if (soundOn) setTimeout(go, 1400); else { endPending = go; setTimeout(() => { if (endPending) { endPending = null; go(); } }, 12000); }
+    }
+    return;
+  }
+  if (lastE == null) { // פעם ראשונה שנכנסים: מחכים ללחיצה על "הפעלת קולות" כדי שההצצה הראשונה תהיה עם קול
+    lastE = e; peekAt = Date.now();
+    if (soundOn) setTimeout(() => dealerPeek(), 900);
+    else { firstPending = true; firstTimer = setTimeout(() => { if (firstPending) { firstPending = false; dealerPeek(); } }, 12000); }
+    return;
+  }
+  // לכל חבר קצב משלו: אחרי כל כניסה יש סיכוי של 1 ל-3 שתקפוץ דילרית (בממוצע כל 3 כניסות),
+  // ולא יותר מ-5 כניסות בלי הצצה. ככה בכל כניסה זה קופץ אצל חבר אחר, לא לכולם ביחד.
+  for (let k = lastE; k < e; k++) {
+    since += 1;
+    if (since >= 5 || Math.random() < 1 / 3) { since = 0; peekAt = Date.now(); setTimeout(() => dealerPeek(), 500 + Math.random() * 1500); break; }
+  }
+  lastE = e;
+}
+function apply(path, d) {
+  if (path === '/') data = d;
+  else {
+    if (!data) data = {};
+    const keys = path.split('/').filter(Boolean); let o = data;
+    keys.slice(0, -1).forEach((k) => { if (!o[k]) o[k] = {}; o = o[k]; });
+    const last = keys[keys.length - 1]; if (d === null) delete o[last]; else o[last] = d;
+  }
+  render(); status(); maybePeek();
+}
+
+let es = null, pollT = null;
+function connect() {
+  if (!id || !DB.startsWith('http')) { $m.innerHTML = '<div class="msg">קישור לא תקין.</div>'; return; }
+  try {
+    es = new EventSource(`${DB}/live/${id}.json`);
+    es.addEventListener('put', (e) => { connected = true; const j = JSON.parse(e.data); apply(j.path, j.data); });
+    es.addEventListener('patch', (e) => { connected = true; const j = JSON.parse(e.data); Object.entries(j.data || {}).forEach(([k, v]) => apply((j.path === '/' ? '' : j.path) + '/' + k, v)); });
+    es.addEventListener('cancel', () => { connected = true; data = null; render(); status(); });
+    es.onerror = () => { connected = false; status(); if (es.readyState === 2) { es.close(); setTimeout(connect, 4000); } };
+    es.onopen = () => { connected = true; status(); };
+  } catch { poll(); }
+}
+async function poll() {
+  try { const r = await fetch(`${DB}/live/${id}.json`); connected = r.ok; if (r.ok) { data = await r.json(); render(); } } catch { connected = false; }
+  status(); clearTimeout(pollT); pollT = setTimeout(poll, 5000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && es?.readyState === 2) connect(); });
+connect();
+// פתיחה של 5 שניות, לחיצה מדלגת
+(() => {
+  const el = document.getElementById('intro');
+  let done = false;
+  const fin = () => { if (done) return; done = true; el.classList.add('out'); setTimeout(() => { el.remove(); introDone = true; maybePeek(); }, 620); };
+  el.addEventListener('click', fin);
+  setTimeout(fin, 5000);
+})();
+</script>
+</body>
+</html>
